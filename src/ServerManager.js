@@ -2,6 +2,7 @@ const cors = require('cors');
 const express = require('express');
 const DBManager = require('./DatabaseManager');
 const AuthManager = require('./AuthenticationHandler');
+const FSManager = require('./FSManager');
 
 class ServerManager {
 
@@ -17,6 +18,7 @@ class ServerManager {
         });    
 
         this.auth = new AuthManager(this.app, this.db);
+        this.fs = new FSManager(this.app, this.auth);
     }
 
     async initialize() {
@@ -25,8 +27,8 @@ class ServerManager {
         this.app.use(express.json());
 
         await this.db.connect();
+        await this.fs.enableRoutes();
         await this.auth.allowRegister(true);
-        await this.auth.enableFileAPI();
       
         this.app.get('/prv', this.auth.verifyToken, (req, res) => {
 

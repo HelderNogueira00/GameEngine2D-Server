@@ -2,6 +2,7 @@ const bcrypt = require('bcrypt');
 const fs = require('fs');
 const jwst = require('jsonwebtoken');
 const path = require('path');
+const { act } = require('react');
 
 class AuthenticationHandler {
 
@@ -18,13 +19,35 @@ class AuthenticationHandler {
 
         this.registerEnabled = val;
         //IF YES
+
+        this.app.post('/vrf', this.auth.verifyToken, (req, res) => {
+    
+            const userID = req.user.id;
+            const userPath = './clients/' + userID + "/";
+
+            if(!name || !action || !fs.existsSync(userPath)) {
+
+                res.json({ data: "" });
+                return;
+            }
+
+            switch(action) {
+
+                case "create": this.onNewDir(path.join(userPath, name)); break;
+                case "delete": this.onDeleteDir(path.join(userPath, name)); break;
+                case "rename": this.onRenameDir(path.join(userPath, name)); break;
+            }
+
+            res.json({ data: this.readDir(userPath) });
+        }); 
+
         this.app.post('/login', async (req, res) => {
 
+            console.log('login req received');
             const { username, password } = req.body;
             if(!username || !password) {
 
-                console.log("Request Invalid Received!");
-                return;
+                return res.status(401).json({ message: 'Invalid credentials!'});
             }
 
             try {
@@ -56,57 +79,7 @@ class AuthenticationHandler {
         });
     }
 
-    readDir(dirPath, indent = '|') {
-
-        let result = '';
-        const items = fs.readdirSync(dirPath, { withFileTypes: true });
-
-        for(const item of items) {
-
-            const fullPath = path.join(dirPath, item.name);
-            if(item.isDirectory()) {
-
-                result += `${indent}[DIR][${item.name}]\n`;
-                result += this.readDir(fullPath, indent + ' ');
-            }
-            else result += `${indent}[FILE][${item.name}]\n`;
-        }
-
-        return result;
-    }
-
-    async enableFileAPI() {
-
-        this.app.get('/fsapi', this.verifyToken, (req, res) => {
-
-            const userID = req.user.id;
-
-            if(!fs.existsSync('./clients/' + userID + "/"))
-                fs.mkdirSync('./clients/' + userID + "/");
-
-            const tree = this.readDir('./clients/' + userID + "/");
-            res.json({ data: tree });
-        }); 
-
-        this.app.post('/fsapi/new_dir', this.verifyToken, (req, res) => {
-
-            const userID = req.user.id;
-            const name = req.body.name;
-            const userPath = './clients/' + userID + "/";
-
-            if(!name && !fs.existsSync(userPath)) {
-
-                res.json({ data: "" });
-                return;
-            }
-
-            const newPath = path.join(userPath, name);
-
-            if(!fs.existsSync(newPath))
-                fs.mkdirSync(newPath);
-            res.json({ data: this.readDir(userPath) });
-        }); 
-    }
+    
 
     async hashString(string) {
 
