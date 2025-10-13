@@ -1,4 +1,4 @@
-const bcrypt = require('bcrypt');
+
 const fs = require('fs');
 const jwst = require('jsonwebtoken');
 const path = require('path');
@@ -20,25 +20,10 @@ class AuthenticationHandler {
         this.registerEnabled = val;
         //IF YES
 
-        this.app.post('/vrf', this.auth.verifyToken, (req, res) => {
-    
-            const userID = req.user.id;
-            const userPath = './clients/' + userID + "/";
-
-            if(!name || !action || !fs.existsSync(userPath)) {
-
-                res.json({ data: "" });
-                return;
-            }
-
-            switch(action) {
-
-                case "create": this.onNewDir(path.join(userPath, name)); break;
-                case "delete": this.onDeleteDir(path.join(userPath, name)); break;
-                case "rename": this.onRenameDir(path.join(userPath, name)); break;
-            }
-
-            res.json({ data: this.readDir(userPath) });
+        this.app.get('/vrftk', this.verifyToken, (req, res) => {
+            
+            console.log("Token Verified For User " + req.user.id);
+            res.status(200).json({ message: "ok"});
         }); 
 
         this.app.post('/login', async (req, res) => {
@@ -72,47 +57,11 @@ class AuthenticationHandler {
                     return res.status(401).json({ message: 'Invalid credentials!'});
                 
                 const token = this.generateJWToken(dbResult.rows[0]);
-                res.json({ token: token });
+                res.status(200).json({ token: token });
                 console.log("Login OK!");
             }
             catch(err) { console.log("Login Error: " + err); }
         });
-    }
-
-    
-
-    async hashString(string) {
-
-        return await bcrypt.hash(string, 10);
-    }
-
-    async verifyHash(string, hash) {
-
-        return await bcrypt.compare(string, hash);
-    }
-
-    verifyToken(req, res, next) {
-        
-        const authHeader = req.headers['authorization'];
-        const token = authHeader && authHeader.split(' ')[1];
-        if (!token) return res.status(401).json({ message: 'Access denied' });
-
-        jwst.verify(token, "jasonpasswordsecretkey", (err, user) => {
-            if (err) return res.status(403).json({ message: 'Invalid token' });
-            req.user = user;
-            next();
-        });
-    }
-
-    generateJWToken(user) {
-
-        const token = jwst.sign({
-
-            id: user.id,
-            username: user.username
-        }, "jasonpasswordsecretkey", { expiresIn: "1h" });
-
-        return token;
     }
 }
 
