@@ -10,10 +10,12 @@ class ProjectsAPI extends APIBase {
     
     init() {
         
+        this.onProjectLoad = this.onProjectLoad.bind(this);
         this.onProjectsFetch = this.onProjectsFetch.bind(this);
         this.onProjectDelete = this.onProjectDelete.bind(this);
         this.onProjectCreate = this.onProjectCreate.bind(this);
 
+        this.addRoute(true, 'post', 'load', this.onProjectLoad);
         this.addRoute(true, 'get', 'fetch', this.onProjectsFetch);
         this.addRoute(true, 'post', 'delete', this.onProjectDelete);
         this.addRoute(true, 'post', 'create', this.onProjectCreate);
@@ -57,6 +59,25 @@ class ProjectsAPI extends APIBase {
 
         await this.db.run("INSERT INTO projects (id, userID, name, description) VALUES (DEFAULT, ?, ?, ?);", [userID, name, desc]);
         return res.status(200).json({ data: "ok" });
+    }
+
+    async onProjectLoad(req, res) {
+
+        const userID = req.user.id;
+        const { projectID } = req.body;
+
+        if(!userID || !projectID)
+            return this.sendFail(res);
+
+        const dbData = await this.db.run("SELECT * FROM projects WHERE userID = ? AND id = ?;", [userID, projectID]);
+        if(dbData.rows.length === 1) {
+
+            const dbID = dbData.rows[0].id;
+            console.log("User #" + userID + ": is Loading Project: " + dbData.rows[0].name);
+            return res.status(200).json({ id: dbID, data: "ok" });
+        }
+        
+        return this.sendFail(res);
     }
 }
 

@@ -1,4 +1,4 @@
-
+const bcrypt = require('bcrypt');
 const fs = require('fs');
 const jwst = require('jsonwebtoken');
 const path = require('path');
