@@ -74,7 +74,7 @@ class ProjectsAPI extends APIBase {
 
             const dbID = dbData.rows[0].id;
             console.log("User #" + userID + ": is Loading Project: " + dbData.rows[0].name);
-            return res.status(200).json({ id: dbID, data: "ok" });
+            return res.status(200).json({ id: dbID, name: dbData.rows[0].name, data: "ok" });
         }
         
         return this.sendFail(res);

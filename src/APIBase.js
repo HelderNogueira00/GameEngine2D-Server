@@ -1,4 +1,6 @@
 const cors = require('cors');
+const multer = require('multer');
+const upload = multer({ dest: 'uploads/' });
 const AuthManager = require('./AuthManager');
 
 class APIBase {
@@ -13,19 +15,25 @@ class APIBase {
         this.init();
     }
 
-    addRoute(protect, method, address, exec) {
+    addRoute(protect, method, address, exec, form = false) {
 
-        if(method === 'get' && protect)
+        if(method === 'get' && protect && !form)
             this.app.get('/' + this.baseAddress + '/' + address, this.authManager.verifyToken, async (req, res) => exec(req, res));
         
-        else if (method === 'post' && protect)
+        else if (method === 'post' && protect && !form)
             this.app.post('/' + this.baseAddress + '/' + address, this.authManager.verifyToken, async (req, res) => exec(req, res));    
 
-        else if (method === 'post' && !protect)
+        else if (method === 'post' && !protect && !form)
             this.app.post('/' + this.baseAddress + '/' + address, async (req, res) => exec(req, res));    
 
-        else if (method === 'get' && !protect)
+        else if (method === 'get' && !protect && !form)
             this.app.get('/' + this.baseAddress + '/' + address, async (req, res) => exec(req, res));    
+
+        else if (method === 'post' && protect && form) {
+
+            console.log('uploading route');
+            this.app.post('/' + this.baseAddress + '/' + address, this.authManager.verifyToken, upload.single('myFile'), async (req, res) => exec(req, res));    
+        }
     }
 
     init() { }
