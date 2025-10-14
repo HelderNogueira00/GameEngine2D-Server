@@ -26,47 +26,11 @@ class FSManager {
             fs.renameSync(path);
     }
 
-    getExtension(path) {
-
-        let ext = path.split('.').pop();
-        if(ext.includes("\\"))
-            ext = "DIR";
-
-        switch(ext) {
-
-            case "txt": ext = "TEXT"; break;
-            case "js": ext = "SCRIPT"; break;
-            case "png": ext = "IMAGE"; break;
-        }
-
-        return ext;
-    }
+    
 
     readDir(dirPath, indent = '|') {
 
-        let index = 1;
-        let result = '';
-        const items = fs.readdirSync(dirPath, { withFileTypes: true });
-
-        for(const item of items) {
-
-            const fullPath = path.join(dirPath, item.name);
-            const userID = fullPath.split('\\')[1];
-            const match = "clients\\" + userID + "\\";
-            console.log(match) ;
-            const index = fullPath.indexOf(match);
-            const basePath = fullPath.substring(index + match.length);
-            const extension = this.getExtension(fullPath);
-
-            if(item.isDirectory()) {
-
-                result += `${indent}[${extension}][${basePath}]\n`;
-                result += this.readDir(fullPath, indent);
-            }
-            else result += `${indent}[${extension}][${basePath}]\n`;
-        }
-
-        return result;
+        
     }
 
     async enableRoutes() {
