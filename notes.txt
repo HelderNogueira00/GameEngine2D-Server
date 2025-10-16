@@ -1,6 +1,0 @@
-this upload also includes squared2d.sql file which is the
-database file, passwords are very simple thorugh the
-code if you decide to copy this project please
-change them. I also include a picture of the database
-tables and relationships in case you want to get an idea
-how the database is designed :)
