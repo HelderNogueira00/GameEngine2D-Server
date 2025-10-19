@@ -140,7 +140,7 @@ class FilesystemAPI extends APIBase {
             if(dbData.rows.length === 1) {
 
                 const projectName = dbData.rows[0].name;
-                const userPath = './clients/' + userID + "/";
+                const userPath = '.\\clients\\' + userID + "\\";
                 const projectPath = path.join(userPath,projectName);
                 const targetPath = path.join(projectPath, name);
                
@@ -173,7 +173,7 @@ class FilesystemAPI extends APIBase {
             if(dbData.rows.length === 1) {
 
                 const projectName = dbData.rows[0].name;
-                const userPath = './clients/' + userID + "/";
+                const userPath = '.\\clients\\' + userID + "\\";
                 const projectPath = path.join(userPath,projectName);
                 const currentPath = path.join(projectPath, name);
                 const newPath = path.join(projectPath, newName);
@@ -266,8 +266,8 @@ class FilesystemAPI extends APIBase {
         for(const item of items) {
 
             const fullPath = path.join(dirPath, item.name);
-            const userID = fullPath.split('\\')[1];
-            const match = "clients\\" + userID + "\\" + projectName + "\\";
+            const userID = fullPath.split('/')[1];
+            const match = "clients/" + userID + "/" + projectName + "/";
             console.log(match) ;
             const index = fullPath.indexOf(match);
             const basePath = fullPath.substring(index + match.length);
@@ -287,7 +287,7 @@ class FilesystemAPI extends APIBase {
     getExtension(path) {
 
         let ext = path.split('.').pop();
-        if(ext.includes("\\"))
+        if(ext.includes("/"))
             ext = "DIR";
 
         switch(ext) {
