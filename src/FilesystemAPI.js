@@ -24,7 +24,6 @@ class FilesystemAPI extends APIBase {
 
         this.addRoute(true, 'post', 'delete', this.onDelete);
         this.addRoute(true, 'post', 'refresh', this.onRefresh);
-        //this.addRoute(true, 'get', 'view/:projectID/:filename', this.onFilePreview);
         this.addRoute(true, 'post', 'rename', this.onRenameDir);
         this.addRoute(true, 'post', 'create_dir', this.onCreateDir);
         this.addRoute(true, 'post', 'upload', this.onUploadAsset, true);
@@ -35,10 +34,9 @@ class FilesystemAPI extends APIBase {
     async onGetFile(req, res) {
 
         const userID = req.user.id;
-        const fileName = req.params.filename.replaceAll('_', '/');
+        const fileName = req.params.filename.replaceAll(':', '/');
         const projectName = req.params.projectName;
         const filePath = `./clients/${userID}/${projectName}/${fileName}`;
-
         console.log("Requested File: " + filePath);
         if(!fs.existsSync(filePath))
             return this.sendFail(res);
@@ -83,16 +81,20 @@ class FilesystemAPI extends APIBase {
         const form = req.file;
         const { projectID, name } = req.body;
 
-        console.log(name);
+        console.log("Uploading New Asset: " + name);
         
         if(!userID || !projectID || !form)
             return this.sendFail(res);
         
+        console.log("Invalid Data!");
+
         if(!this.db.isConnected())
             return this.sendFail(res);
         
+        console.log("DB OK!");
         try {
 
+            console.log("Connecting To DB ...");
             const sql = "SELECT * FROM projects WHERE id = ? AND userID = ?;";
             const dbData = await this.db.run(sql, [projectID, userID]);
 
@@ -140,7 +142,7 @@ class FilesystemAPI extends APIBase {
             if(dbData.rows.length === 1) {
 
                 const projectName = dbData.rows[0].name;
-                const userPath = '.\\clients\\' + userID + "\\";
+                const userPath = './clients/' + userID + "/";
                 const projectPath = path.join(userPath,projectName);
                 const targetPath = path.join(projectPath, name);
                
@@ -173,7 +175,7 @@ class FilesystemAPI extends APIBase {
             if(dbData.rows.length === 1) {
 
                 const projectName = dbData.rows[0].name;
-                const userPath = '.\\clients\\' + userID + "\\";
+                const userPath = './clients/' + userID + "/";
                 const projectPath = path.join(userPath,projectName);
                 const currentPath = path.join(projectPath, name);
                 const newPath = path.join(projectPath, newName);
