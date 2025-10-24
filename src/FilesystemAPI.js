@@ -297,6 +297,7 @@ class FilesystemAPI extends APIBase {
             case "txt": ext = "TEXT"; break;
             case "js": ext = "SCRIPT"; break;
             case "png": ext = "IMAGE"; break;
+            case "ws": ext = "SCENE"; break;
         }
 
         return ext;
