@@ -12,10 +12,12 @@ class AuthAPI extends APIBase {
         this.onLogin = this.onLogin.bind(this);
         this.onLogout = this.onLogout.bind(this);
         this.onVerifyToken = this.onVerifyToken.bind(this);
+        this.onCreateAccount = this.onCreateAccount.bind(this);
 
         this.addRoute(false, 'post', 'login', this.onLogin);
         this.addRoute(true, 'get', 'logout', this.onLogout);
         this.addRoute(false, 'get', 'token',  this.onVerifyToken);
+        this.addRoute(false, 'post', 'createAccount', this.onCreateAccount);
     }
 
     async onCreateAccount(req, res) {
@@ -36,31 +38,18 @@ class AuthAPI extends APIBase {
             
             if(dbResult.rows.length === 0) {
                 
-                const query = "";
-                if(dbUser) {
-                    
-                    const dbID = dbResult.rows[0].id;
-                    const dbUsername = dbResult.rows[0].username;
-                    const dbPassword = dbResult.rows[0].password;
-                    
-                    if(dbUsername && dbPassword) {
-                        
-                        const valid = await this.authManager.verifyHash(password, dbPassword);
-                        if(valid) {
+                const hashedPassword = await this.authManager.hashString(password);
+                const query = "INSERT INTO users (id, salt, username, password, status) VALUES " + 
+                "(DEFAULT, 'A3F54AF5A', ?, ?, 'Confirmed');";
 
-                            console.log("Auth API [OnLogin] => OK: " + req.body);
-                            this.db.run("INSERT INTO logins (id, userID, timestamp, action) VALUES (DEFAULT, ?, DEFAULT, 'Login')", [dbID]);
-                            return res.status(200).json({ token: this.authManager.generateJWToken(dbUser) });
-                        }
-                    }
-                }
+                this.db.run(query, [username, hashedPassword]);
+                return res.status(200).json({ message: "success" });
             }
             else return this.sendFail(res);
         }
         catch(err) { console.log("DB ERROR: " + err); }
 
-        console.log("Auth API [OnLogin] => Error: " + req.body);
-        this.db.run("INSERT INTO logins (id, userID, timestamp, action) VALUES (DEFAULT, ?, DEFAULT, 'Attempt')", [1]);
+        console.log("Auth API [Create Account] => Error: " + req.body);
         return this.sendFail(res);
     }
 
