@@ -18,6 +18,52 @@ class AuthAPI extends APIBase {
         this.addRoute(false, 'get', 'token',  this.onVerifyToken);
     }
 
+    async onCreateAccount(req, res) {
+
+        const { name, email, username, password } = req.body;
+        if(!username || !password || !email || !name) 
+            return this.sendFail(res);
+
+        if(this.db === undefined)
+            return this.sendFail(res);
+        
+        if(!this.db.isConnected())
+            return this.sendFail(res);
+
+        try {
+            
+            const dbResult = await this.db.run("SELECT * FROM users WHERE username = ?", [username]);
+            
+            if(dbResult.rows.length === 0) {
+                
+                const query = "";
+                if(dbUser) {
+                    
+                    const dbID = dbResult.rows[0].id;
+                    const dbUsername = dbResult.rows[0].username;
+                    const dbPassword = dbResult.rows[0].password;
+                    
+                    if(dbUsername && dbPassword) {
+                        
+                        const valid = await this.authManager.verifyHash(password, dbPassword);
+                        if(valid) {
+
+                            console.log("Auth API [OnLogin] => OK: " + req.body);
+                            this.db.run("INSERT INTO logins (id, userID, timestamp, action) VALUES (DEFAULT, ?, DEFAULT, 'Login')", [dbID]);
+                            return res.status(200).json({ token: this.authManager.generateJWToken(dbUser) });
+                        }
+                    }
+                }
+            }
+            else return this.sendFail(res);
+        }
+        catch(err) { console.log("DB ERROR: " + err); }
+
+        console.log("Auth API [OnLogin] => Error: " + req.body);
+        this.db.run("INSERT INTO logins (id, userID, timestamp, action) VALUES (DEFAULT, ?, DEFAULT, 'Attempt')", [1]);
+        return this.sendFail(res);
+    }
+
     async onLogin(req, res) {
 
         const { username, password } = req.body;
